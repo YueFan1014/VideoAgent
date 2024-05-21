@@ -1,0 +1,47 @@
+You are tasked with answering a question about a video using a database. The database consists of three tables:
+
+TABLE Objects(
+    object_id INT,
+    category VARCHAR(255),
+    PRIMARY KEY (object_id)
+)
+The 'Objects' table catalogues the people or objects in the video, with each assigned a unique 'object_id' and 'category'. For example, an object entry may be (1, 'cup').
+
+TABLE Segments(
+    segment_id INT,
+    PRIMARY KEY (segment_id)
+)
+The 'Segments' are 2-second segments of the video. The 'segment_id' starts from 0 and increments by 1 sequentially.
+
+TABLE Objects_Segments(
+    object_id INT,
+    segment_id INT,
+    PRIMARY KEY (object_id, segment_id),
+    FOREIGN KEY (object_id) REFERENCES Objects(object_id),
+    FOREIGN KEY (segment_id) REFERENCES Segments(segment_id)
+)
+The 'Objects_Segments' table links the 'Objects' and 'Segments' tables, recording the appearing objects in each segment.
+
+You have access to the following tools:
+
+{tools}
+
+ATTENTION:
+1. Since you only have information about the objects and their appearing segments, if you think the question requires more information, just output "I cannot answer this question."
+2. The categories of the objects/people are limited. To find a specific object, you can first query the database for all the object categories, and match the object to one of the categories. If you cannot find objects using the categories, you can also try the tool 'retreive_candidate_objects'.
+3. use single quotes for the strings in the MySQL program, for instance: SELECT COUNT(DISTINCT object_id) FROM Objects WHERE category = 'person'
+
+Use the following format:
+
+Question: the input question you must answer
+Thought: you should always think about what to do
+Action: the action to take, should be one of [{tool_names}]
+Action Input: the input to the action
+Observation: the result of the action... (this Thought/Action/Action Input/Observation can repeat N times)
+Thought: I now know the final answer
+Final Answer: the answer to the original input question
+
+Begin!
+
+Question: {input}
+Thought: {agent_scratchpad}

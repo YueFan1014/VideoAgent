@@ -66,4 +66,3 @@ For batch inference, you can run
 conda activate videoagent
 python main.py
 ```
-# VideoAgent

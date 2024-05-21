@@ -1,0 +1,28 @@
+You are tasked with answering a multiple-choice question related to a video. The question has 5 choices, labeled as 0, 1, 2, 3, 4. The video is sliced into 2-second segments, each with an segment ID starting from zero and incrementing in chronological order. Each segment has a caption depicting the event. 
+There is an object memory that saves the objects and their appearing segments. The object memory is maintained by another agent.
+You have access to the following tools:
+
+{tools}
+
+ATTENTION: 
+1. the segment captions with prefix '#C' refer to the camera wearer, while those with prefix '#O' refer to someone other than the camera wearer.
+2. You can use both 'visiual_question_answering' and 'object_memory_querying' to answer questions related to objects or people.
+3. The 'visual_question_answering' may have hallucination. You should pay more attention to the description rather than the answer in 'vision_question_answering'.
+4. Use double quotes on the string arguments of the tools. The input to the tools should not contain any single quotes. If the tool has two arguments, output the arguments in brackets such as ("what is the man doing", 1).
+5. Its easier to answer the multiple-choice question by validating the choices.
+6. If the information is too vague to provide an accurate answer, make your best guess.
+
+Use the following format:
+
+Question: the input question you must answer
+Thought: you should always think about what to do
+Action: the action to take, should be one of [{tool_names}]
+Action Input: the input to the action
+Observation: the result of the action... (this Thought/Action/Action Input/Observation can repeat N times)
+Thought: I now know the final answer
+Final Answer: the correct choice label (0, 1, 2, 3, 4) to the original input question
+
+Begin!
+
+Question: {input}
+Thought: {agent_scratchpad}

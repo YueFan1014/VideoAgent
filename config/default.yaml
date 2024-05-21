@@ -1,0 +1,4 @@
+openai_api_key: your_openai-api_key
+use_reid: true
+vqa_tool: videollava #videollava or gpt-4v
+base_dir: preprocess
