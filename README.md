@@ -66,3 +66,15 @@ For batch inference, you can run
 conda activate videoagent
 python main.py
 ```
+
+# Reference
+
+```
+@article{fan2024videoagent,
+  title={VideoAgent: A Memory-augmented Multimodal Agent for Video Understanding},
+  author={Fan, Yue and Ma, Xiaojian and Wu, Rujie and Du, Yuntao and Li, Jiaqi and Gao, Zhi and Li, Qing},
+  journal={arXiv preprint arXiv:2403.11481},
+  year={2024}
+}
+```
+
