@@ -9,7 +9,7 @@ Given a video and a question, VideoAgent has two phases: memory construction pha
 </p>
 
 # Prerequisites
-This project is tested on Ubuntu 22.04 with a NVIDIA RTX 4090(24GB).  
+This project is tested on Ubuntu 20.04 with a NVIDIA RTX 4090(24GB).  
 
 
 # Installation Guide
