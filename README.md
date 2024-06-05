@@ -15,7 +15,7 @@ This project is tested on Ubuntu 20.04 with a NVIDIA RTX 4090(24GB).
 # Installation Guide
 Use the following command to create the environment named as videoagent:
 ```sh
-conda env create -f envrionment.yaml
+conda env create -f environment.yaml
 ```
 
 Create the environment of [Video-LLaVA](https://github.com/PKU-YuanGroup/Video-LLaVA) by running the following command:
@@ -67,7 +67,7 @@ conda activate videoagent
 python main.py
 ```
 
-# Reference
+# Cite
 
 ```
 @article{fan2024videoagent,
