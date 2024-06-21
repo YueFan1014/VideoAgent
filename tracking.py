@@ -223,8 +223,8 @@ class Tracking:
                     clip_input = clip_transform(img).unsqueeze(0).cuda()
                     dinov2_input = dinov2_transform(img).unsqueeze(0).cuda()
                     with torch.no_grad():
-                        clip_feature = clip_model.encode_image(clip_input)
-                        dinov2_feature = dinov2_model(dinov2_input)
+                        clip_feature = clip_model.encode_image(clip_input).cpu()
+                        dinov2_feature = dinov2_model(dinov2_input).cpu()
                     track_id2clip_emb[track_id].append(clip_feature)
                     track_id2dinov2_emb[track_id].append(dinov2_feature)
             cap.release()
