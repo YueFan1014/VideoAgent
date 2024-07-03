@@ -1,4 +1,4 @@
-<h1>VideoAgent: A Memory-augmented Multimodal Agent for Video Understanding</h1>
+<h1>VideoAgent: A Memory-augmented Multimodal Agent for Video Understanding (ECCV 2024)</h1>
 
 # Introduction
 This is the official code repository of [VideoAgent](https://videoagent.github.io/). VideoAgent is a mulit-modal agent that can understand the input video and answer the questions raised by you.
