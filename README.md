@@ -1,7 +1,8 @@
 <h1>VideoAgent: A Memory-augmented Multimodal Agent for Video Understanding (ECCV 2024)</h1>
 
 # Introduction
-This is the official code repository of [VideoAgent](https://videoagent.github.io/). VideoAgent is a mulit-modal agent that can understand the input video and answer the questions raised by you.
+This is the official code repository of [VideoAgent: A Memory-augmented Multimodal Agent for Video Understanding
+](https://videoagent.github.io/). VideoAgent is a mulit-modal agent that can understand the input video and answer the questions raised by you.
 
 Given a video and a question, VideoAgent has two phases: memory construction phase and inference phase. During the memory construction phase, structured information is extracted from the video and stored in the memory. During the inference phase, a LLM is prompted to use a set of tools interacting with the memory to answer the question.
 <p align="center">
