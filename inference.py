@@ -1,6 +1,6 @@
 from langchain import hub
 from langchain.agents import AgentExecutor, create_react_agent, tool
-from langchain_openai import OpenAI, ChatOpenAI
+from langchain_openai import OpenAI, ChatOpenAI, AzureChatOpenAI
 from tools import ToolKit
 import ast
 import sys
@@ -15,7 +15,13 @@ from reid import ReID
 from multiprocessing import Process
 import socket
 from omegaconf import OmegaConf
+import openai
+import time
+import numpy as np
 
+
+os.environ["AZURE_OPENAI_ENDPOINT"] = "YOUR_AZURE_OPENAI_ENDPOINT"
+os.environ["AZURE_OPENAI_API_KEY"] = "YOUR_AZURE_OPENAI_API_KEY"
 
 
 def ReActAgent(video_path, question, base_dir='preprocess', vqa_tool='videollava', use_reid=True, openai_api_key='your_openai_api_key'):
@@ -38,7 +44,8 @@ def ReActAgent(video_path, question, base_dir='preprocess', vqa_tool='videollava
         with open('prompts/database_query_prompt.txt') as f:
             t = f.read()
         prompt.template = t
-        llm = ChatOpenAI(model='gpt-4', temperature=0.0, openai_api_key=openai_api_key)
+        #llm = ChatOpenAI(model='gpt-4', temperature=0.0, openai_api_key=openai_api_key)
+        llm = AzureChatOpenAI(temperature=0, openai_api_version='2024-02-01', azure_deployment="gpt-4o-2024-05-13", streaming=False)
         tools = [database_querying, open_vocabulary_object_retrieval]
         agent = create_react_agent(llm, tools, prompt)
         agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
@@ -87,17 +94,15 @@ def ReActAgent(video_path, question, base_dir='preprocess', vqa_tool='videollava
         return '\n'+answer+'\n'
 
     prompt = hub.pull("hwchase17/react")
-    with open('prompts/prompt.txt') as f:
+    with open('prompts/multiple_choice_prompt.txt') as f:
         t = f.read()
 
     prompt.template = t
-    #print(prompt)
-    llm = ChatOpenAI(model='gpt-4', temperature=0.0, openai_api_key=openai_api_key)
+    llm = AzureChatOpenAI(temperature=0, openai_api_version='2024-02-01', azure_deployment="gpt-4o-2024-05-13", streaming=False)
     tools = [caption_retrieval, segment_localization, visual_question_answering, object_memory_querying]
     agent = create_react_agent(llm, tools, prompt)
     print(question)
     agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
-
     original_stdout = sys.stdout
     output_catcher = StringIO()
     sys.stdout = output_catcher
@@ -110,7 +115,6 @@ def ReActAgent(video_path, question, base_dir='preprocess', vqa_tool='videollava
     answer = None
     log = ""
     for line in lines:
-        print(line)
         new_line = color_pattern.sub('', line)
         log += new_line
         if new_line.startswith("Final Answer: "):
@@ -170,13 +174,27 @@ def preprocess(video_path_list, base_dir='preprocess', show_tracking=False):
 
 
 def main(video_path_list, video_question_list, base_dir='preprocess', vqa_tool='videollava', use_reid=True, openai_api_key='your_openai_api_key'):
-    preprocess(video_path_list=video_path_list, 
-               base_dir=base_dir, 
-               show_tracking=False)
     question_num = len(video_question_list)
+    tot = 0
     for i in range(question_num):
-       ReActAgent(video_path=video_path_list[i], question=video_question_list[i], base_dir=base_dir, vqa_tool=vqa_tool, use_reid=use_reid, openai_api_key=openai_api_key)
-
+        print(f"video: {video_path_list[i]}")
+        print(f"question: {i}")
+        answer_path = f"all_datasets/EgoSchema/all_videos/answers/question_{i}_log.txt"
+        if os.path.exists(answer_path):
+            continue
+        try:
+            start_time = time.time()
+            answer, log = ReActAgent(video_path=video_path_list[i], question=video_question_list[i], base_dir=base_dir, vqa_tool=vqa_tool, use_reid=use_reid, openai_api_key=openai_api_key)
+            with open(answer_path, 'w') as f:
+                f.write(video_question_list[i])
+                f.write(log)
+            tot += 1
+            end_time = time.time()
+            print(f"inference time for question {i}: {np.round(end_time-start_time, 2)} seconds")
+            print("total: ", tot)
+        except:
+            continue
+       
 
 if __name__ == '__main__':
     config = OmegaConf.load('config/default.yaml')
@@ -184,21 +202,33 @@ if __name__ == '__main__':
     use_reid = config['use_reid']
     vqa_tool = config['vqa_tool']
     base_dir = config['base_dir']
-
-    video_path_list = [
-        "sample_videos/boats.mp4",
-        "sample_videos/talking.mp4",
-        "sample_videos/books.mp4",
-        "sample_videos/painting.mp4",
-        "sample_videos/kitchen.mp4"
-    ]
-    video_question_list = [
-        "How many boats are there in the video?",
-        "From what clue do you know that the woman with black spectacles at the start of the video is married?",
-        "Based on the actions observed, what could be a possible motivation or goal for what c is doing in the video?",
-        "What was the primary purpose of the cup of water in this video, and how did it contribute to the overall painting process?",
-        "Is there a microwave in the kitchen?"
-    ]
+    with open('datasets/EgoSchema/questions.json') as f:
+        datasets = json.load(f)
+    video_path_list = []
+    video_question_list = []
+    
+    for q in datasets:
+        video_id = q["q_uid"]
+        video_file = f"datasets/EgoSchema/all_videos/good_clips_git/{video_id}.mp4"
+        video_path_list.append(video_file)
+        question_content = q["question"]+'\n'
+        for i in range(5):
+            question_content+=f'{i}: '+q[f"option {i}"]+'\n'
+        # question_content is a multiple-choice question as follows:
+        # While not explicitly listing the video actions, explain the ultimate objective c tries to achieve throughout the video.
+        # 0: The ultimate objective of c is to carefully dust and clean the sewing machine thoroughly.
+        # 1: The ultimate objective for c is to skillfully cut and remove the thread from the fabric's weave.
+        # 2: C's ultimate objective is to sew two pieces of fabric together.
+        # 3: C's ultimate objective is essentially to carefully remove the thread from the fabric's weave.
+        # 4: C's ultimate objective is to shift a fabric on the table.
+        video_question_list.append(question_content)
+   
+    print(len(video_path_list))
+    print(len(video_question_list))
+    
+    preprocess(video_path_list=video_path_list, 
+            base_dir=base_dir, 
+            show_tracking=False)
     
     main(video_path_list=video_path_list, 
          video_question_list=video_question_list,
