@@ -68,14 +68,16 @@ conda activate videoagent
 python main.py
 ```
 
-# Cite
-
+# Citation
+If you find our paper and code useful in your research, please consider giving a star ⭐ and citation 📝.
 ```
-@article{fan2024videoagent,
-  title={VideoAgent: A Memory-augmented Multimodal Agent for Video Understanding},
+@inproceedings{fan2025videoagent,
+  title={Videoagent: A memory-augmented multimodal agent for video understanding},
   author={Fan, Yue and Ma, Xiaojian and Wu, Rujie and Du, Yuntao and Li, Jiaqi and Gao, Zhi and Li, Qing},
-  journal={arXiv preprint arXiv:2403.11481},
-  year={2024}
+  booktitle={European Conference on Computer Vision},
+  pages={75--92},
+  year={2025},
+  organization={Springer}
 }
 ```
 
