@@ -17,10 +17,25 @@ import socket
 from omegaconf import OmegaConf
 
 
+# Base URLs of the OpenAI-compatible provider, selected by region.
+MINIMAX_BASE_URLS = {
+    'global_en': 'https://api.minimax.io/v1',
+    'cn_zh': 'https://api.minimaxi.com/v1',
+}
 
-def ReActAgent(video_path, question, base_dir='preprocess', vqa_tool='videollava', use_reid=True, openai_api_key='your_openai_api_key'):
-    assert vqa_tool in ['videollava', 'gpt-4v']
-    toolkit = ToolKit(video_path=video_path, base_dir=base_dir, vqa_tool=vqa_tool, use_reid=use_reid, openai_api_key=openai_api_key)
+
+def resolve_minimax_base_url(region):
+    """Return the OpenAI-compatible base URL for the given region."""
+    return MINIMAX_BASE_URLS.get(region, MINIMAX_BASE_URLS['global_en'])
+
+
+def ReActAgent(video_path, question, base_dir='preprocess', vqa_tool='videollava', use_reid=True,
+               minimax_api_key='your_minimax_api_key', minimax_base_url='https://api.minimax.io/v1',
+               minimax_text_model='MiniMax-M3.1-Flash', minimax_vision_model='MiniMax-M3'):
+    assert vqa_tool in ['videollava', 'minimax']
+    toolkit = ToolKit(video_path=video_path, base_dir=base_dir, vqa_tool=vqa_tool, use_reid=use_reid,
+                      minimax_api_key=minimax_api_key, minimax_base_url=minimax_base_url,
+                      minimax_vision_model=minimax_vision_model)
     @tool
     def object_memory_querying(question):
         """Given a question about open-vocabulary objects such as 'how many people are there in the video?' or 'In which segments did the brown dog appear?', this tool will give the answer based on the object memory."""
@@ -38,7 +53,8 @@ def ReActAgent(video_path, question, base_dir='preprocess', vqa_tool='videollava
         with open('prompts/database_query_prompt.txt') as f:
             t = f.read()
         prompt.template = t
-        llm = ChatOpenAI(model='gpt-4', temperature=0.0, openai_api_key=openai_api_key)
+        llm = ChatOpenAI(model=minimax_text_model, temperature=0.0,
+                         openai_api_key=minimax_api_key, openai_api_base=minimax_base_url)
         tools = [database_querying, open_vocabulary_object_retrieval]
         agent = create_react_agent(llm, tools, prompt)
         agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
@@ -92,7 +108,8 @@ def ReActAgent(video_path, question, base_dir='preprocess', vqa_tool='videollava
 
     prompt.template = t
     #print(prompt)
-    llm = ChatOpenAI(model='gpt-4', temperature=0.0, openai_api_key=openai_api_key)
+    llm = ChatOpenAI(model=minimax_text_model, temperature=0.0,
+                     openai_api_key=minimax_api_key, openai_api_base=minimax_base_url)
     tools = [caption_retrieval, segment_localization, visual_question_answering, object_memory_querying]
     agent = create_react_agent(llm, tools, prompt)
     print(question)
@@ -169,21 +186,28 @@ def preprocess(video_path_list, base_dir='preprocess', show_tracking=False):
     
 
 
-def main(video_path_list, video_question_list, base_dir='preprocess', vqa_tool='videollava', use_reid=True, openai_api_key='your_openai_api_key'):
-    preprocess(video_path_list=video_path_list, 
-               base_dir=base_dir, 
+def main(video_path_list, video_question_list, base_dir='preprocess', vqa_tool='videollava', use_reid=True,
+         minimax_api_key='your_minimax_api_key', minimax_base_url='https://api.minimax.io/v1',
+         minimax_text_model='MiniMax-M3.1-Flash', minimax_vision_model='MiniMax-M3'):
+    preprocess(video_path_list=video_path_list,
+               base_dir=base_dir,
                show_tracking=False)
     question_num = len(video_question_list)
     for i in range(question_num):
-       ReActAgent(video_path=video_path_list[i], question=video_question_list[i], base_dir=base_dir, vqa_tool=vqa_tool, use_reid=use_reid, openai_api_key=openai_api_key)
+       ReActAgent(video_path=video_path_list[i], question=video_question_list[i], base_dir=base_dir, vqa_tool=vqa_tool, use_reid=use_reid,
+                  minimax_api_key=minimax_api_key, minimax_base_url=minimax_base_url,
+                  minimax_text_model=minimax_text_model, minimax_vision_model=minimax_vision_model)
 
 
 if __name__ == '__main__':
     config = OmegaConf.load('config/default.yaml')
-    openai_api_key = config['openai_api_key']
     use_reid = config['use_reid']
     vqa_tool = config['vqa_tool']
     base_dir = config['base_dir']
+    minimax_api_key = config['minimax_api_key']
+    minimax_base_url = resolve_minimax_base_url(config['minimax_region'])
+    minimax_text_model = config['minimax_text_model']
+    minimax_vision_model = config['minimax_vision_model']
 
     video_path_list = [
         "sample_videos/boats.mp4",
@@ -199,10 +223,13 @@ if __name__ == '__main__':
         "What was the primary purpose of the cup of water in this video, and how did it contribute to the overall painting process?",
         "Is there a microwave in the kitchen?"
     ]
-    
-    main(video_path_list=video_path_list, 
+
+    main(video_path_list=video_path_list,
          video_question_list=video_question_list,
-          base_dir=base_dir, 
-          vqa_tool=vqa_tool, 
-          use_reid=use_reid, 
-          openai_api_key=openai_api_key)
+          base_dir=base_dir,
+          vqa_tool=vqa_tool,
+          use_reid=use_reid,
+          minimax_api_key=minimax_api_key,
+          minimax_base_url=minimax_base_url,
+          minimax_text_model=minimax_text_model,
+          minimax_vision_model=minimax_vision_model)

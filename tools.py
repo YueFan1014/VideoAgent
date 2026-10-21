@@ -28,16 +28,20 @@ model_cfgs = {
 
 
 class ToolKit:
-    def __init__(self, video_path, base_dir='preprocess', vqa_tool='videollava', use_reid=True, openai_api_key='your_openai_api_key'):
+    def __init__(self, video_path, base_dir='preprocess', vqa_tool='videollava', use_reid=True,
+                 minimax_api_key='your_minimax_api_key', minimax_base_url='https://api.minimax.io/v1',
+                 minimax_vision_model='MiniMax-M3'):
         self.video_path = video_path
         base_name = os.path.basename(video_path).replace(".mp4", "")
         self.video_dir = os.path.join(base_dir, base_name)
-        assert vqa_tool in ["videollava", "gpt-4v"]
+        assert vqa_tool in ["videollava", "minimax"]
         self.vqa_tool = vqa_tool
         cap = cv2.VideoCapture(video_path)
         self.fps = round(cap.get(cv2.CAP_PROP_FPS))
         cap.release()
-        self.openai_api_key = openai_api_key
+        self.minimax_api_key = minimax_api_key
+        self.minimax_base_url = minimax_base_url
+        self.minimax_vision_model = minimax_vision_model
 
         
         with open(osp.join(self.video_dir, 'captions.json')) as f:
@@ -138,7 +142,7 @@ class ToolKit:
         return ans
     
 
-    def gpt4v_VQA(self, question, segment_id):
+    def minimax_VQA(self, question, segment_id):
         if segment_id not in range(self.segment_num):
             return f"Segment ID {segment_id} not in range 0-{self.segment_num-1}."
         candidate_segments = []
@@ -172,11 +176,11 @@ class ToolKit:
 
         headers = {
         "Content-Type": "application/json",
-        "Authorization": f"Bearer {self.openai_api_key}"
+        "Authorization": f"Bearer {self.minimax_api_key}"
         }
         question = f"The images are sequential frames in a 6-second video. Please briefly describe what happened in the video then briefly provide the answer to the question '{question}'."
         payload = {
-        "model": "gpt-4-vision-preview",
+        "model": self.minimax_vision_model,
         "messages": [
             {
             "role": "user",
@@ -206,13 +210,13 @@ class ToolKit:
         ],
         "max_tokens": 200
         }
-        response = requests.post("https://api.openai.com/v1/chat/completions", headers=headers, json=payload)
+        response = requests.post(f"{self.minimax_base_url}/chat/completions", headers=headers, json=payload)
         return response.json()['choices'][0]['message']['content']
-    
-    
+
+
     def visual_question_answering(self, question, segment_id):
         if self.vqa_tool == 'videollava':
             return self.videollava_VQA(question=question, segment_id=segment_id)
-        elif self.vqa_tool == 'gpt-4v':
-            return self.gpt4v_VQA(question=question, segment_id=segment_id)
+        elif self.vqa_tool == 'minimax':
+            return self.minimax_VQA(question=question, segment_id=segment_id)
 

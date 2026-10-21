@@ -1,23 +1,27 @@
 import gradio as gr
-import openai
-from main import preprocess, ReActAgent
+from main import preprocess, ReActAgent, resolve_minimax_base_url
 from multiprocessing import Process
 import os
 import socket
 from omegaconf import OmegaConf
 
 config = OmegaConf.load('config/default.yaml')
-openai_api_key = config['openai_api_key']
 use_reid = config['use_reid']
 vqa_tool = config['vqa_tool']
 base_dir = config['base_dir']
+minimax_api_key = config['minimax_api_key']
+minimax_base_url = resolve_minimax_base_url(config['minimax_region'])
+minimax_text_model = config['minimax_text_model']
+minimax_vision_model = config['minimax_vision_model']
 
 
 def ask_question(video_file, question):
-    preprocess(video_path_list=[video_file], 
-               base_dir=base_dir, 
+    preprocess(video_path_list=[video_file],
+               base_dir=base_dir,
                show_tracking=False)
-    answer, log = ReActAgent(video_path=video_file, question=question, base_dir=base_dir, vqa_tool=vqa_tool, use_reid=use_reid, openai_api_key=openai_api_key)
+    answer, log = ReActAgent(video_path=video_file, question=question, base_dir=base_dir, vqa_tool=vqa_tool, use_reid=use_reid,
+                             minimax_api_key=minimax_api_key, minimax_base_url=minimax_base_url,
+                             minimax_text_model=minimax_text_model, minimax_vision_model=minimax_vision_model)
     base_name = os.path.basename(video_file).replace(".mp4", "")
     reid_file = os.path.join("preprocess", base_name, "reid.mp4")
     return answer, reid_file, log
