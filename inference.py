@@ -23,7 +23,7 @@ import numpy as np
 
 def ReActAgent(video_path, question, base_dir='preprocess', vqa_tool='videollava', use_reid=True,
                minimax_api_key='your_minimax_api_key', minimax_base_url='https://api.minimax.io/v1',
-               minimax_text_model='MiniMax-M2.7', minimax_vision_model='MiniMax-M3'):
+               minimax_text_model='MiniMax-M3.1-Flash', minimax_vision_model='MiniMax-M3'):
     assert vqa_tool in ['videollava', 'minimax']
     toolkit = ToolKit(video_path=video_path, base_dir=base_dir, vqa_tool=vqa_tool, use_reid=use_reid,
                       minimax_api_key=minimax_api_key, minimax_base_url=minimax_base_url,
@@ -177,7 +177,7 @@ def preprocess(video_path_list, base_dir='preprocess', show_tracking=False):
 
 def main(video_path_list, video_question_list, base_dir='preprocess', vqa_tool='videollava', use_reid=True,
          minimax_api_key='your_minimax_api_key', minimax_base_url='https://api.minimax.io/v1',
-         minimax_text_model='MiniMax-M2.7', minimax_vision_model='MiniMax-M3'):
+         minimax_text_model='MiniMax-M3.1-Flash', minimax_vision_model='MiniMax-M3'):
     question_num = len(video_question_list)
     tot = 0
     for i in range(question_num):
