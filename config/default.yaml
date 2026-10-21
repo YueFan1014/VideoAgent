@@ -7,5 +7,7 @@ base_dir: preprocess
 # minimax_region selects the base URL: global_en (https://api.minimax.io/v1) or cn_zh (https://api.minimaxi.com/v1).
 minimax_api_key: your_minimax_api_key
 minimax_region: global_en
+# Text models: MiniMax-M3.1-Flash (default), MiniMax-M3 (alternative).
+# Explicit custom or legacy model IDs are passed through unchanged.
 minimax_text_model: MiniMax-M3.1-Flash
 minimax_vision_model: MiniMax-M3
